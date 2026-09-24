@@ -859,13 +859,13 @@ const FILL_LEVELS = [
    ========================================================================== */
 
 const METRICS = [
-  { value:24,    en:"custom extraction models running in production", pt:"modelos de extracção custom em produção",
+  { value:110,   prefix:"~", en:"supplier VAT numbers covered in production", pt:"NIFs de fornecedores cobertos em produção",
     src:{ en:"Azure Logic Apps / AEI", pt:"Azure Logic Apps / AEI" } },
   { value:12000, fmt:"thou", prefix:"~", en:"annotations labelled for the detection dataset", pt:"anotações etiquetadas no dataset de detecção",
     src:{ en:"SkyVision Auditor", pt:"SkyVision Auditor" } },
-  { value:95,    suffix:"%", en:"less processing time per document", pt:"menos tempo de processamento por documento",
-    src:{ en:"30 min to under 2 min", pt:"30 min para menos de 2 min" } },
-  { value:200,   suffix:"+", en:"documents a day with no manual step", pt:"documentos por dia sem passo manual",
+  { value:2,     prefix:"<", suffix:" min", en:"per document, down from 30 min", pt:"por documento, contra 30 min antes",
+    src:{ en:"AEI extraction pipeline", pt:"Pipeline de extracção AEI" } },
+  { value:200,   suffix:"+", en:"documents a day through the pipeline", pt:"documentos por dia pela pipeline",
     src:{ en:"Sustained production load", pt:"Carga de produção sustentada" } }
 ];
 
@@ -875,12 +875,12 @@ const PROJECTS = [
     tag:{ en:"Computer Vision", pt:"Computer Vision" },
     sub:{ en:"Drone-based warehouse auditing with a custom object detector",
           pt:"Auditoria de armazém por drone com detector de objectos custom" },
-    ctx:{ en:"A multi-zone fashion retail warehouse of roughly 6,000 SKUs and 50,000 units was counted by hand. The audit took a full team several hours and was already out of date by the time it finished.",
-          pt:"Um armazém de retalho de moda multi-zona, com cerca de 6.000 SKUs e 50.000 unidades, era contado à mão. A auditoria ocupava uma equipa várias horas e já estava desactualizada quando terminava." },
+    ctx:{ en:"A multi-zone fashion retail warehouse of roughly 6,000 SKUs and 50,000 units was counted by hand.",
+          pt:"Um armazém de retalho de moda multi-zona, com cerca de 6.000 SKUs e 50.000 unidades, era contado à mão." },
     build:{ en:"A drone flies a programmed trajectory and the frames go through a custom YOLO26 detector. Location comes from the filename, not from markers in the scene, so nothing has to be added to the warehouse itself.",
             pt:"Um drone percorre uma trajectória programada e os frames passam por um detector YOLO26 custom. A localização vem do filename, não de marcadores na cena, por isso nada tem de ser acrescentado ao armazém." },
-    win:{ en:"Multi-hour manual audit becomes a scan under one hour, with all vision processing kept on-premise.",
-          pt:"A auditoria manual de várias horas passa a um scan em menos de uma hora, com todo o processamento de visão a correr on-premise." },
+    win:{ en:"An end-to-end audit pipeline from drone capture to WMS submission, with all vision processing kept on-premise.",
+          pt:"Uma pipeline de auditoria de ponta a ponta, da captura por drone à submissão no WMS, com todo o processamento de visão on-premise." },
     pipe:{ en:["Drone capture","Frame ingest","YOLO26 detection","Fill classification","WMS submission"],
            pt:["Captura por drone","Ingestão de frames","Detecção YOLO26","Classificação de ocupação","Submissão WMS"] },
     bullets:{
@@ -892,91 +892,43 @@ const PROJECTS = [
           "Classificação de ocupação em seis níveis, derivada da intersecção de áreas entre stock detectado e geometria da caixa.",
           "Sem códigos de barras, sem marcadores ArUco e sem reconstrução 3D da cena.",
           "Submissão WMS resiliente via Azure API Management, com buffer local, retry exponencial e processamento idempotente pela chave do filename."] },
-    stack:["Python","PyTorch","Ultralytics YOLO26","OpenCV","DeepSORT","Azure Blob Storage","Azure APIM","Power BI"]
+    stack:["Python","PyTorch","Ultralytics YOLO26","OpenCV","Azure Blob Storage","Azure APIM"]
   },
   {
-    id:"multimodel", title:"Multi-Model Invoice Engine",
+    id:"aei", title:"AEI - Accounting Engine Interface",
     tag:{ en:"Document AI", pt:"Document AI" },
-    sub:{ en:"Deterministic classification and model routing across two markets",
-          pt:"Classificação determinística e routing de modelos em dois mercados" },
-    ctx:{ en:"A single generic extraction model cannot hold accuracy across suppliers whose layouts have nothing in common, and every new supplier degraded the ones already working.",
-          pt:"Um único modelo genérico de extracção não aguenta a accuracy entre fornecedores cujos layouts nada têm em comum, e cada novo fornecedor degradava os que já funcionavam." },
-    build:{ en:"A deterministic classifier reads the tax identifier, resolves the supplier and routes the document to the model trained for it. Adding a supplier means adding a case, not retraining everything.",
-            pt:"Um classificador determinístico lê o identificador fiscal, resolve o fornecedor e encaminha o documento para o modelo treinado para ele. Acrescentar um fornecedor é acrescentar um caso, não retreinar tudo." },
-    win:{ en:"Above 95% classification and above 97% extraction accuracy across PT and ES, with manual processing down 90%.",
-          pt:"Acima de 95% na classificação e acima de 97% na extracção, em PT e ES, com o processamento manual reduzido em 90%." },
-    pipe:{ en:["Intake","Classification","Model routing","Field extraction","Accounting submission"],
-           pt:["Recepção","Classificação","Routing de modelos","Extracção de campos","Submissão contabilística"] },
+    sub:{ en:"AI extraction and a validation portal for supplier documents across PT and ES",
+          pt:"Extracção por AI e portal de validação para documentos de fornecedores em PT e ES" },
+    ctx:{ en:"Supplier documents arrived in several languages and layouts and were keyed in by hand. A single generic extraction model could not hold accuracy across suppliers whose layouts have nothing in common.",
+          pt:"Os documentos de fornecedores chegavam em várias línguas e layouts e eram introduzidos à mão. Um único modelo genérico de extracção não aguentava a accuracy entre fornecedores cujos layouts nada têm em comum." },
+    build:{ en:"A classifier resolves the supplier from its VAT number and routes each document to the case built for it: custom Azure DI Studio models or Content Understanding + GPT-4.1, with a prebuilt + GPT-4.1 fallback for unknown suppliers. The output lands in an Angular 19 portal where reviewers validate and correct each document before posting.",
+            pt:"Um classificador resolve o fornecedor pelo NIF e encaminha cada documento para o caso construído para ele: modelos custom em Azure DI Studio ou Content Understanding + GPT-4.1, com fallback prebuilt + GPT-4.1 para fornecedores desconhecidos. O resultado chega a um portal Angular 19 onde revisores validam e corrigem cada documento antes do lançamento." },
+    win:{ en:"Above 95% classification and above 97% extraction accuracy across PT and ES, with processing time down from 30 minutes to under 2 per document at more than 200 documents a day.",
+          pt:"Acima de 95% na classificação e acima de 97% na extracção, em PT e ES, com o tempo de processamento a descer de 30 minutos para menos de 2 por documento, a mais de 200 documentos por dia." },
+    pipe:{ en:["Intake","Classification","Supplier routing","AI extraction","Portal validation"],
+           pt:["Recepção","Classificação","Routing por fornecedor","Extracção por AI","Validação no portal"] },
     bullets:{
-      en:["One classifier, nine custom extraction models, eight hybrid Content Understanding plus LLM pipelines and one generic fallback.",
-          "20 to 25% higher accuracy than generic off-the-shelf extraction on the same documents.",
-          "Multi-market cases reuse one prefix across PT and ES, so the case count stays manageable.",
-          "New suppliers are added as cases, without redesigning the pipeline."],
-      pt:["Um classificador, nove modelos de extracção custom, oito pipelines híbridos Content Understanding mais LLM e um fallback genérico.",
-          "Accuracy 20 a 25% acima de soluções genéricas sobre os mesmos documentos.",
-          "Casos multi-mercado reutilizam um prefixo em PT e ES, o que mantém o número de casos controlável.",
-          "Novos fornecedores entram como casos, sem redesenhar a pipeline."] },
-    stack:["Azure Logic Apps","Azure Document Intelligence","Azure AI Foundry","GPT-4.1","REST APIs"]
-  },
-  {
-    id:"dualengine", title:"Dual-Engine IDP",
-    tag:{ en:"Document AI", pt:"Document AI" },
-    sub:{ en:"Trained extraction and semantic enrichment on the same document",
-          pt:"Extracção treinada e enriquecimento semântico sobre o mesmo documento" },
-    ctx:{ en:"A construction group with more than 30 suppliers had documents where the structured fields were reliable but the descriptive content, the part that decides the accounting treatment, was not.",
-          pt:"Um grupo de construção com mais de 30 fornecedores tinha documentos onde os campos estruturados eram fiáveis mas o conteúdo descritivo, a parte que decide o tratamento contabilístico, não era." },
-    build:{ en:"Two engines run in parallel on the same file. Trained models handle the structured fields, Content Understanding and GPT-4.1 handle the semantics, and the branches converge into one JSON contract.",
-            pt:"Dois motores correm em paralelo sobre o mesmo ficheiro. Os modelos treinados tratam dos campos estruturados, o Content Understanding e o GPT-4.1 tratam da semântica, e os ramos convergem num contrato JSON único." },
-    win:{ en:"One unified output per document, with per-invocation cost tracking so spend is attributable per document.",
-          pt:"Um output unificado por documento, com tracking de custo por invocação para que a despesa seja atribuível por documento." },
-    pipe:{ en:["Intake","Custom extraction","Content Understanding + GPT-4.1","Merged JSON","Cost log"],
-           pt:["Recepção","Extracção custom","Content Understanding + GPT-4.1","JSON unificado","Registo de custo"] },
-    bullets:{
-      en:["Custom classification and extraction models run alongside Azure AI Foundry Content Understanding.",
-          "Parallel branches process concurrently and converge into a single unified JSON contract.",
-          "Per-invocation cost tracking on every model call.",
-          "More than 30 suppliers served without a per-supplier rewrite."],
-      pt:["Modelos de classificação e extracção custom correm ao lado do Azure AI Foundry Content Understanding.",
-          "Ramos paralelos processam em simultâneo e convergem num contrato JSON único.",
-          "Tracking de custo por invocação em cada chamada de modelo.",
-          "Mais de 30 fornecedores servidos sem reescrita por fornecedor."] },
-    stack:["Azure Logic Apps","Azure AI Foundry","Azure Document Intelligence","GPT-4.1","REST APIs"]
-  },
-  {
-    id:"finpipe", title:"Financial Document Pipeline",
-    tag:{ en:"Automation", pt:"Automação" },
-    sub:{ en:"Invoices and delivery notes, from blob intake to ERP submission",
-          pt:"Facturas e guias de remessa, da recepção no blob à submissão no ERP" },
-    ctx:{ en:"Documents arrived in several languages and formats and were keyed in by hand, which put a hard ceiling on volume and made every error expensive to trace.",
-          pt:"Os documentos chegavam em várias línguas e formatos e eram introduzidos à mão, o que punha um tecto rígido no volume e tornava cada erro caro de rastrear." },
-    build:{ en:"An end to end pipeline from blob intake through OCR, validation and archiving to ERP submission, with an audit trail written at every stage.",
-            pt:"Uma pipeline de ponta a ponta, da recepção no blob passando por OCR, validação e arquivo até à submissão no ERP, com trilho de auditoria escrito em cada etapa." },
-    win:{ en:"30 minutes per document down to under 2, above 98% accuracy, more than 200 documents a day with zero manual intervention.",
-          pt:"De 30 minutos por documento para menos de 2, accuracy acima de 98%, mais de 200 documentos por dia sem qualquer intervenção manual." },
-    pipe:{ en:["Blob intake","OCR","Validation","Archiving","ERP submission"],
-           pt:["Recepção no blob","OCR","Validação","Arquivo","Submissão no ERP"] },
-    bullets:{
-      en:["Automatic error handling and incidence tracking on every failed document.",
-          "Multi-tier archiving for compliance retention.",
-          "Multilingual documents handled without a separate pipeline per language.",
-          "Sustained load rather than a benchmark figure."],
-      pt:["Tratamento automático de erros e registo de incidências em cada documento falhado.",
-          "Arquivo multi-nível para retenção de compliance.",
-          "Documentos multilingues tratados sem uma pipeline separada por língua.",
-          "Carga sustentada, não um número de benchmark."] },
-    stack:["Azure Logic Apps","Azure Blob Storage","Azure Document Intelligence","Microsoft Graph API","REST APIs"]
+      en:["~110 supplier VAT numbers routed to supplier-specific cases, with new suppliers added as a case instead of a redesign.",
+          "Angular 19 SPA replacing a legacy ASP.NET MVC portal, calling Azure API Management directly with OAuth2 Authorization Code + PKCE and gateway JWT validation.",
+          "Review screens for invoices, travel expenses with receipt preview, delivery notes and OCR documents, with inline editing and related-document tracking.",
+          "Automatic error handling, incident tracking, multi-tier archiving and per-invocation LLM cost tracking, with separate TEST and PROD environments."],
+      pt:["~110 NIFs de fornecedores encaminhados para casos específicos, e novos fornecedores entram como um caso novo, sem redesenho.",
+          "SPA Angular 19 a substituir um portal ASP.NET MVC legacy, a chamar o Azure API Management directamente com OAuth2 Authorization Code + PKCE e validação JWT no gateway.",
+          "Ecrãs de revisão para facturas, despesas de viagem com pré-visualização de recibos, guias de remessa e documentos OCR, com edição inline e rastreio de documentos relacionados.",
+          "Tratamento automático de erros, registo de incidências, arquivo multi-nível e tracking de custo LLM por invocação, com ambientes TEST e PROD separados."] },
+    stack:["Azure Logic Apps","Azure DI Studio","Content Understanding","GPT-4.1","Angular 19","Azure APIM","Azure DevOps"]
   },
   {
     id:"layoutlm", title:"Self-Hosted Extraction Stack",
     tag:{ en:"Deep Learning", pt:"Deep Learning" },
-    sub:{ en:"LayoutLMv3 fine-tuned as a local alternative to cloud document AI",
-          pt:"LayoutLMv3 fine-tuned como alternativa local ao document AI cloud" },
+    sub:{ en:"LayoutLMv3 fine-tuned as a local alternative to cloud document AI (proof of concept)",
+          pt:"LayoutLMv3 fine-tuned como alternativa local ao document AI cloud (prova de conceito)" },
     ctx:{ en:"Cloud document AI is fast to start with but the training loop, the cost curve and the data path all sit outside your control.",
           pt:"O document AI cloud é rápido a arrancar, mas o ciclo de treino, a curva de custo e o caminho dos dados ficam todos fora do teu controlo." },
     build:{ en:"A local stack with PaddleOCR as a decoupled OCR backbone and LayoutLMv3 fine-tuned on supplier-specific datasets, containerised for reproducible deployment.",
             pt:"Uma stack local com PaddleOCR como backbone OCR desacoplado e LayoutLMv3 fine-tuned em datasets específicos por fornecedor, containerizada para deployment reprodutível." },
-    win:{ en:"Full control of infrastructure and training loop, with the same two-stage architecture as the cloud pipeline.",
-          pt:"Controlo total da infraestrutura e do ciclo de treino, com a mesma arquitectura de duas fases da pipeline cloud." },
+    win:{ en:"Validated as a proof of concept: full control of infrastructure and training loop, with the same two-stage architecture as the cloud pipeline.",
+          pt:"Validado como prova de conceito: controlo total da infraestrutura e do ciclo de treino, com a mesma arquitectura de duas fases da pipeline cloud." },
     pipe:{ en:["PaddleOCR","Layout tokens","Classification","Category extractor","FastAPI"],
            pt:["PaddleOCR","Tokens de layout","Classificação","Extractor por categoria","FastAPI"] },
     bullets:{
@@ -989,42 +941,22 @@ const PROJECTS = [
           "PaddleOCR mantido desacoplado para que o backbone OCR possa ser trocado sem tocar no modelo.",
           "Docker para deployment reprodutível entre máquinas."] },
     stack:["LayoutLMv3","PaddleOCR","PyTorch","FastAPI","Docker","ONNX"]
-  },
-  {
-    id:"warehouse", title:"Dual LLM Warehouse System",
-    tag:{ en:"LLM & GenAI", pt:"LLM & GenAI" },
-    sub:{ en:"Local and cloud models switched by time of day",
-          pt:"Modelos local e cloud alternados pela hora do dia" },
-    ctx:{ en:"Running every warehouse query through a cloud LLM is simple to build and expensive to keep, and most of the traffic does not need the larger model.",
-          pt:"Passar todas as consultas de armazém por um LLM cloud é simples de construir e caro de manter, e a maior parte do tráfego não precisa do modelo maior." },
-    build:{ en:"A router picks a local or a cloud model depending on the hour, in front of a custom natural language to SQL engine with voice input.",
-            pt:"Um router escolhe modelo local ou cloud consoante a hora, à frente de um motor custom de linguagem natural para SQL com entrada por voz." },
-    win:{ en:"79% reduction in AI API cost, with real-time inventory across more than 6,100 products and 40,000 items.",
-          pt:"Redução de 79% no custo de API de AI, com inventário em tempo real sobre mais de 6.100 produtos e 40.000 artigos." },
-    pipe:{ en:["Voice or text","Intent","LLM routing","NL to SQL","PostgreSQL"],
-           pt:["Voz ou texto","Intenção","Routing de LLM","NL para SQL","PostgreSQL"] },
-    bullets:{
-      en:["Time-based routing between a local and a cloud model, tuned to the traffic profile.",
-          "Custom natural language to SQL engine with Portuguese, Spanish and English support.",
-          "Voice controlled hands-free operation with speech to text and text to speech.",
-          "Full stack: Spring Boot service, Flutter client, PostgreSQL, containerised."],
-      pt:["Routing por hora entre modelo local e cloud, afinado ao perfil de tráfego.",
-          "Motor custom de linguagem natural para SQL com suporte a português, espanhol e inglês.",
-          "Operação mãos-livres por voz, com speech to text e text to speech.",
-          "Full stack: serviço Spring Boot, cliente Flutter, PostgreSQL, containerizado."] },
-    stack:["Spring Boot","Flutter","PostgreSQL","Docker","Ollama","NLP"]
   }
 ];
 
 const STACKS = [
-  { name:{ en:"Document AI", pt:"Document AI" },
-    items:["Azure Document Intelligence","Azure AI Foundry","Content Understanding","LayoutLMv3","PaddleOCR","OCR","IDP","Document Classification","scikit-learn"] },
-  { name:{ en:"Computer Vision", pt:"Computer Vision" },
-    items:["PyTorch","TensorFlow","Ultralytics YOLO","OpenCV","ONNX","DeepSORT","Object Detection","Fine-tuning"] },
-  { name:{ en:"LLM & GenAI", pt:"LLM & GenAI" },
-    items:["GPT-4.1","Anthropic Claude API","Meta Llama","Hugging Face","Prompt Engineering","Local LLM Deployment","NLP"] },
-  { name:{ en:"Cloud & Engineering", pt:"Cloud & Engenharia" },
-    items:["Azure Logic Apps","Azure API Management","Azure Blob Storage","Azure Static Web Apps","Azure DevOps","Docker","CI/CD","Python","FastAPI","Angular 19","TypeScript","PostgreSQL","Redis","Git"] }
+  { name:{ en:"AI/ML & Document Processing", pt:"AI/ML e Processamento Documental" },
+    items:["Azure DI Studio","Azure AI Foundry","scikit-learn","Custom AI Models","ML Model Training","Document Classification","OCR","IDP","Multi-Model AI","AI Orchestration","Pattern Recognition"] },
+  { name:{ en:"Computer Vision & Deep Learning", pt:"Computer Vision e Deep Learning" },
+    items:["PyTorch","TensorFlow","Ultralytics YOLO","OpenCV","ONNX","LayoutLMv3","Object Detection","Image Classification","Fine-tuning","Custom Training Pipelines"] },
+  { name:{ en:"LLM & GenAI", pt:"LLM e GenAI" },
+    items:["GPT-4.1","Anthropic Claude API","Meta Llama","Hugging Face","Prompt Engineering","LLM Integration","LLM Cost Optimization","Local LLM Deployment","Semantic Analysis","NLP"] },
+  { name:{ en:"Cloud & DevOps", pt:"Cloud e DevOps" },
+    items:["Azure Cloud","Azure Logic Apps","Azure Blob Storage","Azure DevOps","Azure Static Web Apps","CI/CD Pipelines","Cloud Architecture"] },
+  { name:{ en:"Development", pt:"Desenvolvimento" },
+    items:["Python","Angular 19","TypeScript","NumPy","Pandas","Microservices","API Integration","JSON","Real-time Systems"] },
+  { name:{ en:"Tools & Platforms", pt:"Ferramentas e Plataformas" },
+    items:["Microsoft Graph API","Azure OpenAI Service","Azure Machine Learning","Git","Redis"] }
 ];
 
 const ROLES = [
@@ -1037,8 +969,8 @@ const ROLES = [
         d:{ en:"Ownership of the AEI document processing ecosystem, the Angular 19 enterprise portal and the drone computer vision pipeline for fashion retail.",
             pt:"Responsabilidade pelo ecossistema de processamento documental AEI, pelo portal enterprise em Angular 19 e pela pipeline de computer vision por drone para retalho de moda." } },
       { t:{ en:"Junior Developer, Aug 2025 - Jul 2026", pt:"Junior Developer, Ago 2025 - Jul 2026" },
-        d:{ en:"20+ production cases and 24 custom extraction models in Azure Logic Apps. 65% fewer manual errors, 40% less processing time. Frontend migration from legacy ASP.NET MVC to an Angular 19 SPA with OAuth2 and PKCE through Azure API Management.",
-            pt:"Mais de 20 casos em produção e 24 modelos de extracção custom em Azure Logic Apps. Menos 65% de erros manuais e menos 40% de tempo de processamento. Migração de frontend de ASP.NET MVC legacy para SPA Angular 19 com OAuth2 e PKCE através de Azure API Management." } },
+        d:{ en:"Support for ~110 supplier VAT numbers in Azure Logic Apps. 40% fewer manual errors, 65% less processing time. Frontend migration from legacy ASP.NET MVC to an Angular 19 SPA with OAuth2 and PKCE through Azure API Management.",
+            pt:"Suporte a ~110 NIFs de fornecedores em Azure Logic Apps. Menos 40% de erros manuais e menos 65% de tempo de processamento. Migração de frontend de ASP.NET MVC legacy para SPA Angular 19 com OAuth2 e PKCE através de Azure API Management." } },
       { t:{ en:"Intern Developer, Mar 2025 - Jul 2025", pt:"Estágio, Mar 2025 - Jul 2025" },
         d:{ en:"API integration and deployment pipelines, Azure Logic Apps and Blob Storage workflows, first document AI model training and optimisation.",
             pt:"Integração de APIs e pipelines de deployment, workflows de Azure Logic Apps e Blob Storage, primeiro treino e optimização de modelos de document AI." } }
@@ -1049,8 +981,8 @@ const ROLES = [
     place:{ en:"Vila Nova de Famalicão / Freelance", pt:"Vila Nova de Famalicão / Freelance" },
     phases:[
       { t:{ en:"Scope", pt:"Âmbito" },
-        d:{ en:"Independent provider for an administrative and solicitadoria practice. Standardised the workflow for translating and normalising foreign tax documentation, cutting turnaround on cross-border cases. Maintenance and configuration of desktops, laptops, printers and peripherals.",
-            pt:"Prestador independente para um gabinete administrativo e de solicitadoria. Normalizei o fluxo de tradução e normalização de documentação fiscal estrangeira, reduzindo o tempo de resposta em processos transfronteiriços. Manutenção e configuração de desktops, portáteis, impressoras e periféricos." } }
+        d:{ en:"Independent provider for an administrative and solicitadoria practice. Standardised the workflow for translating and normalising foreign tax documentation, cutting turnaround on cross-border cases.",
+            pt:"Prestador independente para um gabinete administrativo e de solicitadoria. Normalizei o fluxo de tradução e normalização de documentação fiscal estrangeira, reduzindo o tempo de resposta em processos transfronteiriços." } }
     ] }
 ];
 
@@ -1116,8 +1048,8 @@ const T = {
     run:"Run extraction", rerun:"Run again", scan:"Scan shelf", rescan:"Scan again",
     x_idle:"idle", x_run:"running", x_done:"complete",
     fields:"fields", avgconf:"avg confidence", model:"model", missed:"below threshold",
-    eb_work:"Selected work", h_work:"Six systems, all shipped",
-    l_work:"Every project below runs on real client data. Open a case for the context, what I built and what changed.",
+    eb_work:"Selected work", h_work:"Three systems, two in production",
+    l_work:"Two run in production on real client data, the third is a self-hosted proof of concept. Open a case for the context, what I built and what changed.",
     ctx:"Context", build:"What I built", win:"Result",
     eb_detection:"Live demo", h_detection:"Detection, running",
     l_detection:"A synthetic shelf with the four classes from my warehouse auditing pipeline. Move the confidence threshold and watch detections drop out and the fill classification change with them.",
@@ -1136,7 +1068,7 @@ const T = {
     cmd_light:"Switch to light theme", cmd_dark:"Switch to dark theme",
     cmd_none:"Nothing matches that.",
     s_hero:"Top", s_numbers:"Numbers", s_extraction:"Extraction", s_work:"Work", s_detection:"Detection", s_stack:"Stack", s_path:"Path", s_education:"Education", s_contact:"Contact",
-    fact_langs:"Portuguese native / English B2 / Spanish A2",
+    fact_langs:"Portuguese native / English B1",
     fact_lic:"Driving licence B",
     fact_av:"Availability on request",
     foot_built:"One HTML file. No framework, no tracking. Demo data is synthetic."
@@ -1153,8 +1085,8 @@ const T = {
     run:"Correr extracção", rerun:"Correr outra vez", scan:"Fazer scan", rescan:"Scan outra vez",
     x_idle:"parado", x_run:"a correr", x_done:"concluído",
     fields:"campos", avgconf:"confiança média", model:"modelo", missed:"abaixo do limiar",
-    eb_work:"Trabalho seleccionado", h_work:"Seis sistemas, todos em produção",
-    l_work:"Todos os projectos abaixo correm sobre dados reais de clientes. Abre um caso para o contexto, o que construí e o que mudou.",
+    eb_work:"Trabalho seleccionado", h_work:"Três sistemas, dois em produção",
+    l_work:"Dois correm em produção sobre dados reais de clientes, o terceiro é uma prova de conceito self-hosted. Abre um caso para o contexto, o que construí e o que mudou.",
     ctx:"Contexto", build:"O que construí", win:"Resultado",
     eb_detection:"Demo ao vivo", h_detection:"Detecção, a correr",
     l_detection:"Uma estante sintética com as quatro classes da minha pipeline de auditoria de armazém. Mexe no limiar de confiança e vê as detecções a cair e a classificação de ocupação a mudar com elas.",
@@ -1173,7 +1105,7 @@ const T = {
     cmd_light:"Mudar para tema claro", cmd_dark:"Mudar para tema escuro",
     cmd_none:"Nada corresponde a isso.",
     s_hero:"Topo", s_numbers:"Números", s_extraction:"Extracção", s_work:"Trabalho", s_detection:"Detecção", s_stack:"Stack", s_path:"Percurso", s_education:"Formação", s_contact:"Contacto",
-    fact_langs:"Português nativo / Inglês B2 / Espanhol A2",
+    fact_langs:"Português nativo / Inglês B1",
     fact_lic:"Carta de condução B",
     fact_av:"Disponibilidade sob consulta",
     foot_built:"Um ficheiro HTML. Sem framework, sem tracking. Os dados das demos são sintéticos."
